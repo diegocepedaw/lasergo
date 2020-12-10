@@ -1,3 +1,5 @@
 gridfiles/
 result/
 __pycache__
+gridfiles/evaluation_grid.png
+result/go2_res.jpg
