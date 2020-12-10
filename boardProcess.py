@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import cv2
 import numpy as np
 
+from gridDetect import process_analysis_grid
 SIDE_LENGTH = 570
 
 def image_resize(image, maxLength = 570, inter = cv2.INTER_AREA):
@@ -171,12 +172,14 @@ class PerspectiveTransform():
         self.cv_img = self.result_cv
         
     def saveImage(self):
-        cv2.imwrite("result/"+self.filename+"_res.jpg", self.result_cv)
+        filename = "result/"+self.filename+"_res.jpg"
+        cv2.imwrite(filename, self.result_cv)
         print(self.filename+" is saved!")
+        process_analysis_grid(filename)
 
     def load_analysis_grid(self):
-        filename = "gridfiles/evaluation_grid.jpg"
-        gridImage = cv2.imread(filename)
+        filename = "gridfiles/evaluation_grid.png"
+        gridImage = image_resize(cv2.imread(filename), maxLength = 570, inter = cv2.INTER_AREA)
         frame_circle = gridImage.copy()
 
         cv2.circle(frame_circle, tuple(self.coord[0]), 5, (0, 0, 255), -1)
@@ -188,13 +191,12 @@ class PerspectiveTransform():
         pts2 = np.float32([[0, 0], [SIDE_LENGTH-1, 0], [0, SIDE_LENGTH-1], [SIDE_LENGTH-1, SIDE_LENGTH-1]])
         matrix = cv2.getPerspectiveTransform(self.pts2, self.pts1)
         grid_result = cv2.warpPerspective(gridImage, matrix, (SIDE_LENGTH,SIDE_LENGTH))
-         
+        src = image_resize(cv2.imread(self.file), maxLength = 570, inter = cv2.INTER_AREA)
+        src = cv2.copyMakeBorder( src, 0, grid_result.shape[0]-src.shape[0], 0, grid_result.shape[1]-src.shape[1], cv2.BORDER_CONSTANT)
+        cv2.imshow("Perspective transformation", cv2.add(src,grid_result))
         cv2.imshow("Grid", grid_result)
-        #cv2.imshow("Perspective transformation", result_cv)
+
         
-        result_rgb = cv2.cvtColor(grid_result, cv2.COLOR_BGR2RGB)
-        tk_image = ImageTk.PhotoImage(image = Image.fromarray(result_rgb))
-        self.canvas.create_image(SIDE_LENGTH, SIDE_LENGTH, image=tk_image, anchor=NW)
 
 
 

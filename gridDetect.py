@@ -12,19 +12,14 @@ def show_wait_destroy(winname, img):
     cv.moveWindow(winname, 600, 0)
     cv.waitKey(0)
     cv.destroyWindow(winname)
-def main(argv):
+def  process_analysis_grid(squareFile):
     # [load_image]
     # Check number of arguments
-    if len(argv) < 1:
-        print ('Not enough parameters')
-        print ('Usage:\nmorph_lines_detection.py < path_to_image >')
-        return -1
     # Load the image
-    src = cv.imread(argv[0], cv.IMREAD_COLOR)
-    src = cv.resize(src, (570,570), interpolation = cv.INTER_AREA)
+    src = cv.imread(squareFile, cv.IMREAD_COLOR)
     # Check if image is loaded fine
     if src is None:
-        print ('Error opening image: ' + argv[0])
+        print ('Error opening image: ' + squareFile)
         return -1
     # Show source image
     #cv.imshow("src", src)
@@ -104,6 +99,7 @@ def main(argv):
     contours=[cv.boundingRect(cnt) for cnt in contours]
     img = np.zeros((src.shape[0],src.shape[1],3), np.uint8)
     ### drawing rectangle for each contour for visualising
+    transparent_background = np.zeros((570, 580, 4))
     for cnt in contours:
         x,y,w,h=cnt
         #cv.rectangle(src,(x,y),(x+w,y+h),(0,255,0),2)
@@ -113,12 +109,15 @@ def main(argv):
         # this represents each individual area that will be evaulated
         cv.rectangle(src,(center_coords[0]-15,center_coords[1]-15),(center_coords[0]+15,center_coords[1]+15),(128,0,128),2)
         cv.circle(src, center_coords, 3, (255, 255, 255), -1)
+
+        cv.circle(transparent_background, center_coords, 5, (255, 255, 255), -1)
     
     show_wait_destroy("intersections", src)
+    show_wait_destroy("intersections", transparent_background)
 
-    filename = 'gridfiles/evaluation_grid.jpg'
-    cv.imwrite(filename, src) 
+    filename = 'gridfiles/evaluation_grid.png'
+    cv.imwrite(filename, transparent_background) 
     
     return 0
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    process_analysis_grid(sys.argv[1:][0])
