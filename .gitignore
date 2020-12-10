@@ -1,2 +1,3 @@
 ./gridfiles/*
 ./result/*
+__pycache__
