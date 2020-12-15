@@ -3,8 +3,9 @@ from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
+import pickle
 
-from gridDetect import process_analysis_grid
+from gridDetect import process_analysis_grid, crop_and_save
 SIDE_LENGTH = 570
 
 def image_resize(image, maxLength = 570, inter = cv2.INTER_AREA):
@@ -71,7 +72,9 @@ class PerspectiveTransform():
         self.undoBtn.grid(row=2,column=2, pady = 5, sticky =NE)
         self.loadBtn = Button(self.ctrPanel, text="Load grid", command=self.load_analysis_grid)
         self.loadBtn.grid(row=3,column=2, pady = 5, sticky =NE)
-    
+        self.loadBtn = Button(self.ctrPanel, text="slice board", command=self.slice)
+        self.loadBtn.grid(row=4,column=2, pady = 5, sticky =NE)
+
     #adding the image
     def addImage(self):
         self.coord = []
@@ -172,10 +175,13 @@ class PerspectiveTransform():
         self.cv_img = self.result_cv
         
     def saveImage(self):
-        filename = "result/"+self.filename+"_res.jpg"
+        filename = "result/flatboard.jpg"
         cv2.imwrite(filename, self.result_cv)
         print(self.filename+" is saved!")
-        process_analysis_grid(filename)
+        self.grid_coords = process_analysis_grid(filename)
+        with open('grid_coords.data', 'wb') as filehandle:
+            # store the data as binary data stream
+            pickle.dump(self.grid_coords, filehandle)
 
     def load_analysis_grid(self):
         filename = "gridfiles/evaluation_grid.png"
@@ -197,6 +203,9 @@ class PerspectiveTransform():
         cv2.imshow("Grid", grid_result)
 
         
+    def slice(self):
+        crop_and_save("result/flatboard.jpg", "training_images\empty_point" )
+
 
 
 

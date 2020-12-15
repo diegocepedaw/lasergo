@@ -6,6 +6,8 @@ import numpy as np
 import sys
 import cv2 as cv
 import imutils
+import pickle
+import uuid
 
 def show_wait_destroy(winname, img):
     cv.imshow(winname, img)
@@ -13,6 +15,8 @@ def show_wait_destroy(winname, img):
     cv.waitKey(0)
     cv.destroyWindow(winname)
 def  process_analysis_grid(squareFile):
+    ''' process and image and extract coordinates for every intersection on the board'''
+
     # [load_image]
     # Check number of arguments
     # Load the image
@@ -155,6 +159,44 @@ def  process_analysis_grid(squareFile):
     filename = 'gridfiles/evaluation_grid.png'
     cv.imwrite(filename, grid_background) 
     
-    return 0
+    return pared_coords
+
+def crop_and_save(src_file, out_path):
+    ''' crop a board into images of each individual intersection and save them to disk to create the training dataset'''
+    # open image
+    with open('grid_coords.data', 'rb') as filehandle:
+        # read the data as binary data stream
+        grid_coords = pickle.load(filehandle)
+
+    src = cv.imread(src_file)
+    # Check if image is loaded fine
+    if src is None:
+        print ('Error opening image: ' + squareFile)
+        return -1
+
+    for coord in grid_coords:
+        x,y = coord
+        ymin = y-15 if y > 15 else 0
+        ymax = y+15 if y < 585 else 600
+        xmin = x-15 if x > 15 else 0
+        xmax = x+15 if x < 585 else 600
+        crop_img = src[ymin:ymax, xmin:xmax]
+        #show_wait_destroy("crop", crop_img)
+        cv.imwrite(out_path+str(uuid.uuid4())+".jpg", crop_img) 
+
+    for coord in grid_coords:
+        x,y = coord
+        ymin = y-15 if y > 15 else 0
+        ymax = y+15 if y < 585 else 600
+        xmin = x-15 if x > 15 else 0
+        xmax = x+15 if x < 585 else 600
+        # make a 60px square cocentric with the contour
+        cv.rectangle(src,(xmin,ymin),(xmax,ymax),(128,0,128),2)
+    show_wait_destroy("intersections", src)
+
+
 if __name__ == "__main__":
-    process_analysis_grid(sys.argv[1:][0])
+    if len(sys.argv) > 2:
+        crop_and_save(sys.argv[1], sys.argv[2])
+    else: 
+        process_analysis_grid(sys.argv[1:][0])
