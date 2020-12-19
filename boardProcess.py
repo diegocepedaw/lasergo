@@ -4,8 +4,9 @@ from PIL import Image, ImageTk
 import cv2
 import numpy as np
 import pickle
+import uuid
 
-from gridDetect import process_analysis_grid, crop_and_save
+from gridDetect import process_analysis_grid, show_wait_destroy
 SIDE_LENGTH = 570
 
 def image_resize(image, maxLength = 570, inter = cv2.INTER_AREA):
@@ -33,6 +34,51 @@ def image_resize(image, maxLength = 570, inter = cv2.INTER_AREA):
 
     # return the resized image
     return resized
+
+def crop_and_save(src_file, out_path):
+    ''' crop a board into images of each individual intersection and save them to disk to create the training dataset'''
+    # open image
+    with open('grid_coords.data', 'rb') as filehandle:
+        # read the data as binary data stream
+        grid_coords = pickle.load(filehandle)
+
+    with open('corner_original_coords.data', 'rb') as filehandle:
+        # read the data as binary data stream
+        pts1 = pickle.load(filehandle)
+    
+    with open('corner_transformed_coords.data', 'rb') as filehandle:
+        # read the data as binary data stream
+        pts2 = pickle.load(filehandle)
+
+    src = cv2.imread(src_file)
+    # Check if image is loaded fine
+    if src is None:
+        print ('Error opening image: ' + squareFile)
+        return -1
+
+    src = image_resize(src, maxLength = 570, inter = cv2.INTER_AREA)
+    matrix = cv2.getPerspectiveTransform(pts1, pts2)
+    src = cv2.warpPerspective(src, matrix, (570,570))
+
+    for coord in grid_coords:
+        x,y = coord
+        ymin = y-15 if y > 15 else 0
+        ymax = y+15 if y < 585 else 600
+        xmin = x-15 if x > 15 else 0
+        xmax = x+15 if x < 585 else 600
+        crop_img = src[ymin:ymax, xmin:xmax]
+        #show_wait_destroy("crop", crop_img)
+        cv2.imwrite(out_path+str(uuid.uuid4())+".jpg", crop_img) 
+
+    for coord in grid_coords:
+        x,y = coord
+        ymin = y-15 if y > 15 else 0
+        ymax = y+15 if y < 585 else 600
+        xmin = x-15 if x > 15 else 0
+        xmax = x+15 if x < 585 else 600
+        # make a 60px square cocentric with the contour
+        cv2.rectangle(src,(xmin,ymin),(xmax,ymax),(128,0,128),2)
+    show_wait_destroy("intersections", src)
 
 
 
@@ -182,6 +228,10 @@ class PerspectiveTransform():
         with open('grid_coords.data', 'wb') as filehandle:
             # store the data as binary data stream
             pickle.dump(self.grid_coords, filehandle)
+        with open('corner_original_coords.data', 'wb') as filehandle:
+            pickle.dump(self.pts1, filehandle)
+        with open('corner_transformed_coords.data', 'wb') as filehandle:
+            pickle.dump(self.pts2, filehandle)
 
     def load_analysis_grid(self):
         filename = "gridfiles/evaluation_grid.png"
@@ -209,9 +259,13 @@ class PerspectiveTransform():
 
 
 
+
+
 #---------------------------------
 if __name__ == '__main__':
-    root = Tk()
-    #root.geometry("500x500")
-    transformer = PerspectiveTransform(root)
-    root.mainloop()
+    if len(sys.argv) > 2:
+        crop_and_save(sys.argv[1], sys.argv[2])
+    else: 
+        root = Tk()
+        transformer = PerspectiveTransform(root)
+        root.mainloop()
