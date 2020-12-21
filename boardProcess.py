@@ -112,14 +112,16 @@ class PerspectiveTransform():
         self.ctrPanel.grid(row = 0, column = 2, columnspan = 2, sticky = N+E)
         self.addImgBtn = Button(self.ctrPanel, text="Browse", command=self.addImage)
         self.addImgBtn.grid(row=0,column=2, pady = 5, sticky =NE)
-        self.saveBtn = Button(self.ctrPanel, text="Save", command=self.saveImage)
-        self.saveBtn.grid(row=1,column=2, pady = 5, sticky =NE)
+        self.initBtn = Button(self.ctrPanel, text="Initialize board", command=self.initImage)
+        self.initBtn.grid(row=1,column=2, pady = 5, sticky =NE)
         self.undoBtn = Button(self.ctrPanel, text="Undo", command=self.undo)
         self.undoBtn.grid(row=2,column=2, pady = 5, sticky =NE)
         self.loadBtn = Button(self.ctrPanel, text="Load grid", command=self.load_analysis_grid)
         self.loadBtn.grid(row=3,column=2, pady = 5, sticky =NE)
         self.loadBtn = Button(self.ctrPanel, text="slice board", command=self.slice)
         self.loadBtn.grid(row=4,column=2, pady = 5, sticky =NE)
+        self.saveBtn = Button(self.ctrPanel, text="Save board", command=self.saveBoard)
+        self.saveBtn.grid(row=5,column=2, pady = 5, sticky =NE)
 
     #adding the image
     def addImage(self):
@@ -210,7 +212,7 @@ class PerspectiveTransform():
         pts2 = np.float32([[0, 0], [maxSide-1, 0], [0, maxSide-1], [maxSide-1, maxSide-1]])
         self.pts1 = pts1
         self.pts2 = pts2
-        matrix = cv2.getPerspectiveTransform(pts1, pts2)
+        matrix = cv2.getPerspectiveTransform(self.pts1, self.pts2)
         self.result_cv = cv2.warpPerspective(frame, matrix, (maxSide,maxSide))
          
         #cv2.imshow("Frame", frame_circle)
@@ -220,7 +222,7 @@ class PerspectiveTransform():
         self.result = ImageTk.PhotoImage(image = Image.fromarray(result_rgb))
         self.cv_img = self.result_cv
         
-    def saveImage(self):
+    def initImage(self):
         filename = "result/flatboard.jpg"
         cv2.imwrite(filename, self.result_cv)
         print(self.filename+" is saved!")
@@ -233,6 +235,18 @@ class PerspectiveTransform():
         with open('corner_transformed_coords.data', 'wb') as filehandle:
             pickle.dump(self.pts2, filehandle)
 
+    def saveBoard(self):
+        maxSide = 720
+        src = cv2.imread(r'test_images\WIN_20201220_22_30_35_Pro.jpg')
+        src = image_resize(src)
+        matrix = cv2.getPerspectiveTransform(self.pts1, self.pts2)
+        self.result_cv = cv2.warpPerspective(src, matrix, (maxSide,maxSide))
+
+        show_wait_destroy("intersections", src)
+        filename = "result/boardstate.jpg"
+        cv2.imwrite(filename, self.result_cv)
+        print(self.filename+" is saved!")
+       
     def load_analysis_grid(self):
         filename = "gridfiles/evaluation_grid.png"
         gridImage = image_resize(cv2.imread(filename), maxLength = 720, inter = cv2.INTER_AREA)

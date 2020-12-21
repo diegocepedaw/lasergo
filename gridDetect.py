@@ -9,6 +9,7 @@ import imutils
 import pickle
 import uuid
 from scipy import spatial
+from test_histogram_coorelation import evaluate_image
 
 test_image = None
 extra_coords = []
@@ -95,26 +96,8 @@ def map_to_goban_coordinates(coordinates):
     
     sorted_board = []
     for row in board_array:
-        print(len(row))
         sorted_board.append(sorted(row, key = lambda x: x[0]))
-    print(len(sorted_board))
-
-    transparent_background = np.zeros((720, 720, 4))
-
-    top_left = sorted_board[0][0]
-    top_right = sorted_board[18][0]
-    bottom_left = sorted_board[0][18]
-    bottom_right = sorted_board[18][18]
-    print("processed corner coords:")
-    print((top_left, top_right, bottom_left, bottom_right))
-    cv2.circle(transparent_background, top_left, 5, (255, 0, 255), -1)
-    cv2.circle(transparent_background, top_right, 5, (255, 0, 255), -1)
-    cv2.circle(transparent_background, bottom_left, 5, (255, 0, 255), -1)
-    cv2.circle(transparent_background, bottom_right, 5, (255, 0, 255), -1)
-
-    
-    show_wait_destroy("corners", transparent_background)
-    transform_coords((top_left, top_right, bottom_left, bottom_right))
+    return sorted_board
 
 def closest_node(node, nodes):
     ''' return nearest neighbor to a coordanate in a list of coordinates'''
@@ -318,6 +301,50 @@ def  process_analysis_grid(squareFile):
     
     return pared_coords
 
+def evaluate_board_state(src_file):
+
+    board_size = 19
+    evaluation_map = {}
+    # open image
+    with open('grid_coords.data', 'rb') as filehandle:
+        # read the data as binary data stream
+        coordinates = pickle.load(filehandle)
+
+    src = cv2.imread(src_file)
+    display_img = np.copy(src)
+    empty_board = cv2.imread(r'result\flatboard.jpg')
+    # Check if image is loaded fine
+    if src is None:
+        print ('Error opening image: ' + squareFile)
+        return -1
+
+    for coord in coordinates:
+        x,y = coord
+        ymin = y-15 if y > 15 else 0
+        ymax = y+15 if y < 705 else 720
+        xmin = x-15 if x > 15 else 0
+        xmax = x+15 if x < 705 else 720
+        crop_img = src[ymin:ymax, xmin:xmax]
+        color = evaluate_image(crop_img)
+        evaluation_map[coord] = color
+        cv2.rectangle(display_img,(x-15,y-15),(x+15,y+15),(128,0,128),2)
+        if color == "black":
+            cv2.circle(empty_board, coord, 15, (0, 0, 0), -1)
+        if color == "white":
+            cv2.circle(empty_board, coord, 15, (255, 255, 255), -1)
+
+    show_wait_destroy("evaluation_area", display_img)
+    show_wait_destroy("calculated state", empty_board)
+        
+
+    matrix = map_to_goban_coordinates(coordinates)
+    s = [[str(evaluation_map[e]) for e in row] for row in matrix]
+    lens = [max(map(len, col)) for col in zip(*s)]
+    fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
+    table = [fmt.format(*row) for row in s]
+    print('\n'.join(table))
+
+
 def crop_and_save(src_file, out_path):
     ''' crop a board into images of each individual intersection and save them to disk to create the training dataset'''
     # open image
@@ -339,7 +366,7 @@ def crop_and_save(src_file, out_path):
         xmax = x+15 if x < 585 else 600
         crop_img = src[ymin:ymax, xmin:xmax]
         #show_wait_destroy("crop", crop_img)
-        cv2.imwrite(out_path+str(uuid.uuid4())+".jpg", crop_img) 
+        #cv2.imwrite(out_path+str(uuid.uuid4())+".jpg", crop_img) 
 
     for coord in grid_coords:
         x,y = coord
@@ -357,5 +384,7 @@ if __name__ == "__main__":
     # TODO: maybe check similarity between image and image of white, black, board perhaps an average of all my samples
     if len(sys.argv) > 2:
         crop_and_save(sys.argv[1], sys.argv[2])
+    elif len(sys.argv) == 2:
+        evaluate_board_state(sys.argv[1])
     else: 
         process_analysis_grid(sys.argv[1:][0])

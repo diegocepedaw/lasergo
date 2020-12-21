@@ -10,7 +10,7 @@ import os
 index = {}
 images = {}
 
-def test_image(image, answer=None):
+def evaluate_image(image, answer=None):
     if len(index) == 0:
         initialize_references()
     results = {}
@@ -26,7 +26,9 @@ def test_image(image, answer=None):
         results[k] = d
     
     correlations = sorted([(v, k) for (k, v) in results.items()], reverse = True)
-    if correlations[0][0] > 0.4:
+    # maximum correlation score to be considered board
+    coorelation_threshold = 0.2
+    if correlations[0][0] > coorelation_threshold:
         evaluated_type = correlations[0][1]
     else:
         evaluated_type = "board"
@@ -77,7 +79,7 @@ def initialize_references():
 
 def test_directories():
     initialize_references()
-    test_images = 1000   
+    evaluate_images = 1000   
     iterations = 0
     mistakes = 0
     f = r'training_images\black_stone'
@@ -85,10 +87,10 @@ def test_directories():
     for file in os.listdir(f):
         filename = f+"/"+file
         image = cv2.imread(filename)
-        if test_image(image, color) != color:
+        if evaluate_image(image, color) != color:
             mistakes += 1
         #img = Image.open(f_img)
-        if iterations > test_images:
+        if iterations > evaluate_images:
             print("%s test:" % color)
             print("correctly labeled: %s" % str(iterations-mistakes))
             print("incorrectly labeled: %s" %  str(mistakes))
@@ -102,10 +104,10 @@ def test_directories():
     for file in os.listdir(f):
         filename = f+"/"+file
         image = cv2.imread(filename)
-        if test_image(image, color) != color:
+        if evaluate_image(image, color) != color:
             mistakes += 1
         #img = Image.open(f_img)
-        if iterations > test_images:
+        if iterations > evaluate_images:
             print("%s test:" % color)
             print("correctly labeled: %s" % str(iterations-mistakes))
             print("incorrectly labeled: %s" %  str(mistakes))
@@ -119,10 +121,10 @@ def test_directories():
     for file in os.listdir(f):
         filename = f+"/"+file
         image = cv2.imread(filename)
-        if test_image(image, color) != color:
+        if evaluate_image(image, color) != color:
             mistakes += 1
         #img = Image.open(f_img)
-        if iterations > test_images:
+        if iterations > evaluate_images:
             print("%s test:" % color)
             print("correctly labeled: %s" % str(iterations-mistakes))
             print("incorrectly labeled: %s" %  str(mistakes))
