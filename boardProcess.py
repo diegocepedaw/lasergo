@@ -6,7 +6,8 @@ import numpy as np
 import pickle
 import uuid
 
-from gridDetect import process_analysis_grid, show_wait_destroy
+from webcam_util import start_capture, capture_image
+from gridDetect import process_analysis_grid, show_wait_destroy, evaluate_board_state
 SIDE_LENGTH = 720
 
 def image_resize(image, maxLength = 720, inter = cv2.INTER_AREA):
@@ -89,6 +90,9 @@ class PerspectiveTransform():
         self.dot = []
         self.file = '' 	 	#image path
         self.filename ='' 	#image filename
+
+        # set up capture camera
+        self.camera = cv2.VideoCapture(0)
         
         #setting up a tkinter canvas with scrollbars
         self.frame = Frame(self.parent, bd=2, relief=SUNKEN)
@@ -122,14 +126,20 @@ class PerspectiveTransform():
         self.loadBtn.grid(row=4,column=2, pady = 5, sticky =NE)
         self.saveBtn = Button(self.ctrPanel, text="Save board", command=self.saveBoard)
         self.saveBtn.grid(row=5,column=2, pady = 5, sticky =NE)
+        self.captureBtn = Button(self.ctrPanel, text="Capture frame", command=self.captureFrame)
+        self.captureBtn.grid(row=6,column=2, pady = 5, sticky =NE)
 
     #adding the image
     def addImage(self):
         self.coord = []
-        self.file = askopenfilename(parent=self.parent, initialdir="image/",title='Choose an image.')
-        self.filename = self.file.split('/')[-1]
-        self.filename = self.filename.rstrip('.jpg')
-        img = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
+        # self.file = askopenfilename(parent=self.parent, initialdir="image/",title='Choose an image.')
+        # self.filename = self.file.split('/')[-1]
+        # self.filename = self.filename.rstrip('.jpg')
+        # img = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
+
+        img = capture_image(self.camera)
+
+        img = image_resize(img, maxLength = 720, inter = cv2.INTER_AREA)
         self.cv_img = img
         self.last_img = img
         b,g,r = cv2.split(img)
@@ -150,7 +160,18 @@ class PerspectiveTransform():
         self.canvas.create_image(0,0,image=self.img,anchor="nw")
         self.coord = []
 
-
+    def captureFrame(self):
+        maxSide = 720
+        img = capture_image(self.camera)
+        matrix = cv2.getPerspectiveTransform(self.pts1, self.pts2)
+        img = image_resize(img, maxLength = 720, inter = cv2.INTER_AREA)
+        img = cv2.warpPerspective(img, matrix, (maxSide,maxSide))
+        show_wait_destroy("image", img)
+        img_name = "captured_images/web_capture.png"
+        cv2.imwrite(img_name, img)
+        print("{} written!".format(img_name))
+        evaluate_board_state("captured_images/web_capture.png")
+    
     #Save coord according to mouse left click
     def insertCoords(self, event):
         if (len(self.coord) == 4):
@@ -223,7 +244,7 @@ class PerspectiveTransform():
         self.cv_img = self.result_cv
         
     def initImage(self):
-        filename = "result/flatboard.jpg"
+        filename = r"result\flatboard.jpg"
         cv2.imwrite(filename, self.result_cv)
         print(self.filename+" is saved!")
         self.grid_coords = process_analysis_grid(filename)
