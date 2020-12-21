@@ -7,9 +7,9 @@ import pickle
 import uuid
 
 from gridDetect import process_analysis_grid, show_wait_destroy
-SIDE_LENGTH = 570
+SIDE_LENGTH = 720
 
-def image_resize(image, maxLength = 570, inter = cv2.INTER_AREA):
+def image_resize(image, maxLength = 720, inter = cv2.INTER_AREA):
     # initialize the dimensions of the image to be resized and
     # grab the image size
     dim = None
@@ -56,9 +56,9 @@ def crop_and_save(src_file, out_path):
         print ('Error opening image: ' + squareFile)
         return -1
 
-    src = image_resize(src, maxLength = 570, inter = cv2.INTER_AREA)
+    src = image_resize(src, maxLength = 720, inter = cv2.INTER_AREA)
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
-    src = cv2.warpPerspective(src, matrix, (570,570))
+    src = cv2.warpPerspective(src, matrix, (720,720))
 
     for coord in grid_coords:
         x,y = coord
@@ -98,7 +98,7 @@ class PerspectiveTransform():
         self.xscroll.grid(row=1, column=0, sticky=E+W)
         self.yscroll = Scrollbar(self.frame)
         self.yscroll.grid(row=0, column=1, sticky=N+S)
-        self.canvas = Canvas(self.frame, bd=0, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set, width=570, height=570)
+        self.canvas = Canvas(self.frame, bd=0, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set, width=720, height=720)
         self.canvas.grid(row=0, column=0, sticky=N+S+E+W)
         self.xscroll.config(command=self.canvas.xview)
         self.yscroll.config(command=self.canvas.yview)
@@ -127,7 +127,7 @@ class PerspectiveTransform():
         self.file = askopenfilename(parent=self.parent, initialdir="image/",title='Choose an image.')
         self.filename = self.file.split('/')[-1]
         self.filename = self.filename.rstrip('.jpg')
-        img = image_resize(cv2.imread(self.file), maxLength = 570, inter = cv2.INTER_AREA)
+        img = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
         self.cv_img = img
         self.last_img = img
         b,g,r = cv2.split(img)
@@ -136,7 +136,7 @@ class PerspectiveTransform():
         self.starting_image = self.img
         
         self.canvas.create_image(0,0,image=self.img,anchor="nw")
-        self.canvas.config(scrollregion=self.canvas.bbox(ALL), width=570, height=570)
+        self.canvas.config(scrollregion=self.canvas.bbox(ALL), width=720, height=720)
         
     def undo(self):
         self.cv_img = self.last_img
@@ -186,7 +186,7 @@ class PerspectiveTransform():
 
     
     def Transformer(self):   
-        frame = self.cv_img #image_resize(cv2.imread(self.file), maxLength = 570, inter = cv2.INTER_AREA)
+        frame = self.cv_img #image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
         self.last_img = frame
         frame_circle = frame.copy()
         #points = [[480,90],[680,90],[0,435],[960,435]]
@@ -205,7 +205,7 @@ class PerspectiveTransform():
 
         maxSide = SIDE_LENGTH #max(maxHeight, maxWidth)
      
-        print(self.coord)
+        #print(self.coord)
         pts1 = np.float32(self.coord)    
         pts2 = np.float32([[0, 0], [maxSide-1, 0], [0, maxSide-1], [maxSide-1, maxSide-1]])
         self.pts1 = pts1
@@ -235,7 +235,7 @@ class PerspectiveTransform():
 
     def load_analysis_grid(self):
         filename = "gridfiles/evaluation_grid.png"
-        gridImage = image_resize(cv2.imread(filename), maxLength = 570, inter = cv2.INTER_AREA)
+        gridImage = image_resize(cv2.imread(filename), maxLength = 720, inter = cv2.INTER_AREA)
         frame_circle = gridImage.copy()
 
         cv2.circle(frame_circle, tuple(self.coord[0]), 5, (0, 0, 255), -1)
@@ -247,7 +247,7 @@ class PerspectiveTransform():
         pts2 = np.float32([[0, 0], [SIDE_LENGTH-1, 0], [0, SIDE_LENGTH-1], [SIDE_LENGTH-1, SIDE_LENGTH-1]])
         matrix = cv2.getPerspectiveTransform(self.pts2, self.pts1)
         grid_result = cv2.warpPerspective(gridImage, matrix, (SIDE_LENGTH,SIDE_LENGTH))
-        src = image_resize(cv2.imread(self.file), maxLength = 570, inter = cv2.INTER_AREA)
+        src = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
         src = cv2.copyMakeBorder( src, 0, grid_result.shape[0]-src.shape[0], 0, grid_result.shape[1]-src.shape[1], cv2.BORDER_CONSTANT)
         cv2.imshow("Perspective transformation", cv2.add(src,grid_result))
         cv2.imshow("Grid", grid_result)

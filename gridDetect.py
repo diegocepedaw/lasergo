@@ -4,34 +4,181 @@
 """
 import numpy as np
 import sys
-import cv2 as cv
+import cv2
 import imutils
 import pickle
 import uuid
+from scipy import spatial
+
+test_image = None
+extra_coords = []
+detected_coords = None
+src_file = r"C:\Users\diego\Documents\lasergo\result\flatboard.jpg"
+src_img = None
+
+
+def draw_grid(img, line_color=(0, 255, 0), thickness=1, type_=cv2.LINE_AA, pxstep=40):
+    '''(ndarray, 3-tuple, int, int) -> void
+    draw gridlines on img
+    line_color:
+        BGR representation of colour
+    thickness:
+        line thickness
+    type:
+        8, 4 or cv2.LINE_AA
+    pxstep:
+        grid line frequency in pixels
+    '''
+    x = pxstep
+    y = pxstep
+    while x < img.shape[1]:
+        cv2.line(img, (x, 0), (x, img.shape[0]), color=line_color, lineType=type_, thickness=thickness)
+        x += pxstep
+
+    while y < img.shape[0]:
+        cv2.line(img, (0, y), (img.shape[1], y), color=line_color, lineType=type_, thickness=thickness)
+        y += pxstep
+
+    fitted_coords=[]
+    board_size = 19
+    i, j = 0, 0
+    while i < board_size:
+        while j < board_size:
+            cv2.circle(img, (i*pxstep,j*pxstep), 15, (255, 0, 255), 2)
+            j += 1
+        j = 0
+        i += 1
+
+def transform_coords(coordinates):
+    src = cv2.imread(src_file, cv2.IMREAD_COLOR)
+    maxSide = 720
+    src.shape
+    pts1 = np.float32(coordinates)    
+    pts2 = np.float32([[0, 0], [maxSide-1, 0], [0, maxSide-1], [maxSide-1, maxSide-1]])
+    matrix = cv2.getPerspectiveTransform(pts1, pts2)
+    result = cv2.warpPerspective(src, matrix, (maxSide,maxSide))
+    draw_grid(result)
+    show_wait_destroy("transfor by corners", result)
+
+def get_coorner_coords(coordinates):
+    ''' this assumes that the top and bottom rows of points are calculated correctly'''
+    boardize = 19
+    # sort by y value
+    coordinates = sorted(coordinates, key = lambda x: x[1])
+    # sort the top row by x value
+    top_left = sorted(coordinates[:19], key = lambda x: x[0])[0]
+    top_right = sorted(coordinates[:19], key = lambda x: x[0])[18]
+    bottom_left = sorted(coordinates[-19:], key = lambda x: x[0])[0]
+    bottom_right = sorted(coordinates[-19:], key = lambda x: x[0])[18]
+   
+    return (top_left, top_right, bottom_left, bottom_right)
+
+    
+
+def map_to_goban_coordinates(coordinates):
+    board_array = []
+    line = []
+    i = 1
+    board_size=19
+    coordinates = sorted(coordinates, key = lambda x: x[1])
+    # map on goban coordinates 19x19
+    for coord in coordinates:
+        if i % (board_size) == 0:
+            i = 1
+            board_array.append(line)
+            line.append((coord))
+            line = []
+            continue
+        line.append((coord))
+        
+        i += 1
+    
+    sorted_board = []
+    for row in board_array:
+        print(len(row))
+        sorted_board.append(sorted(row, key = lambda x: x[0]))
+    print(len(sorted_board))
+
+    transparent_background = np.zeros((720, 720, 4))
+
+    top_left = sorted_board[0][0]
+    top_right = sorted_board[18][0]
+    bottom_left = sorted_board[0][18]
+    bottom_right = sorted_board[18][18]
+    print("processed corner coords:")
+    print((top_left, top_right, bottom_left, bottom_right))
+    cv2.circle(transparent_background, top_left, 5, (255, 0, 255), -1)
+    cv2.circle(transparent_background, top_right, 5, (255, 0, 255), -1)
+    cv2.circle(transparent_background, bottom_left, 5, (255, 0, 255), -1)
+    cv2.circle(transparent_background, bottom_right, 5, (255, 0, 255), -1)
+
+    
+    show_wait_destroy("corners", transparent_background)
+    transform_coords((top_left, top_right, bottom_left, bottom_right))
+
+def closest_node(node, nodes):
+    ''' return nearest neighbor to a coordanate in a list of coordinates'''
+    tree = spatial.KDTree(nodes)
+    return tree.query([node])[1][0]
+
+def draw_circle(event, x, y, flags, param):
+    global mouseX,mouseY
+    global extra_coords
+    global detected_coords
+    extra_coords = []
+    if event == cv2.EVENT_LBUTTONDOWN: 
+        # cv2.circle(test_image, (x, y), 10, (255, 255, 255), -1)
+        mouseX,mouseY = x,y
+        extra_coords.append((x,y))
+        #print(x,y)
+    if event == cv2.EVENT_RBUTTONDOWN:
+        coord_to_delete = closest_node((x,y), detected_coords)
+        detected_coords.pop(coord_to_delete)
+    draw_new_coords(test_image)
+
+def draw_new_coords(img):
+    global test_image
+    global detected_coords
+    global extra_coords
+    global src_img
+
+    detected_coords.extend(extra_coords) 
+    #map_to_goban_coordinates(detected_coords)
+    test_image = np.copy(src_img)
+    for coord in detected_coords:
+        x,y = coord
+        cv2.circle(test_image, coord, 5, (255, 0, 255), -1)
+        cv2.rectangle(test_image,(x-15,y-15),(x+15,y+15),(128,0,128),2)
 
 def show_wait_destroy(winname, img):
-    cv.imshow(winname, img)
-    cv.moveWindow(winname, 600, 0)
-    cv.waitKey(0)
-    cv.destroyWindow(winname)
+    cv2.imshow(winname, img)
+    cv2.moveWindow(winname, 600, 0)
+    cv2.waitKey(0)
+    cv2.destroyWindow(winname)
 def  process_analysis_grid(squareFile):
+
+    global test_image
+    global detected_coords
+    global extra_coords
+    global src_img
     ''' process and image and extract coordinates for every intersection on the board'''
 
     # [load_image]
     # Check number of arguments
     # Load the image
-    src = cv.imread(squareFile, cv.IMREAD_COLOR)
+    src = cv2.imread(squareFile, cv2.IMREAD_COLOR)
+    src_img = np.copy(src)
     # Check if image is loaded fine
     if src is None:
         print ('Error opening image: ' + squareFile)
         return -1
     # Show source image
-    #cv.imshow("src", src)
+    #cv2.imshow("src", src)
     # [load_image]
     # [gray]
     # Transform source image to gray if it is not already
     if len(src.shape) != 2:
-        gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
     else:
         gray = src
     # Show gray image
@@ -39,9 +186,9 @@ def  process_analysis_grid(squareFile):
     # [gray]
     # [bin]
     # Apply adaptiveThreshold at the bitwise_not of gray, notice the ~ symbol
-    gray = cv.bitwise_not(gray)
-    bw = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C, \
-                                cv.THRESH_BINARY, 15, -2)
+    gray = cv2.bitwise_not(gray)
+    bw = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, \
+                                cv2.THRESH_BINARY, 15, -2)
     # Show binary image
     #show_wait_destroy("binary", bw)
     # [bin]
@@ -56,10 +203,10 @@ def  process_analysis_grid(squareFile):
     cols = horizontal.shape[1]
     horizontal_size = cols // 40
     # Create structure element for extracting horizontal lines through morphology operations
-    horizontalStructure = cv.getStructuringElement(cv.MORPH_RECT, (horizontal_size, 1))
+    horizontalStructure = cv2.getStructuringElement(cv2.MORPH_RECT, (horizontal_size, 1))
     # Apply morphology operations
-    horizontal = cv.erode(horizontal, horizontalStructure)
-    horizontal = cv.dilate(horizontal, horizontalStructure)
+    horizontal = cv2.erode(horizontal, horizontalStructure)
+    horizontal = cv2.dilate(horizontal, horizontalStructure)
     # Show extracted horizontal lines
     #show_wait_destroy("horizontal", horizontal)
 
@@ -69,52 +216,52 @@ def  process_analysis_grid(squareFile):
     rows = vertical.shape[0]
     verticalsize = rows // 40
     # Create structure element for extracting vertical lines through morphology operations
-    verticalStructure = cv.getStructuringElement(cv.MORPH_RECT, (1, verticalsize))
+    verticalStructure = cv2.getStructuringElement(cv2.MORPH_RECT, (1, verticalsize))
     # Apply morphology operations
-    vertical = cv.erode(vertical, verticalStructure)
-    vertical = cv.dilate(vertical, verticalStructure)
+    vertical = cv2.erode(vertical, verticalStructure)
+    vertical = cv2.dilate(vertical, verticalStructure)
     
     # Show extracted vertical lines
     #show_wait_destroy("vertical", vertical)
 
-    bwv = cv.adaptiveThreshold(vertical, 255, cv.ADAPTIVE_THRESH_MEAN_C, \
-                                cv.THRESH_BINARY, 15, -2)
-    bwh = cv.adaptiveThreshold(horizontal, 255, cv.ADAPTIVE_THRESH_MEAN_C, \
-                                cv.THRESH_BINARY, 15, -2)
-    v_h_and = cv.bitwise_and(bwv,bwh)
+    bwv = cv2.adaptiveThreshold(vertical, 255, cv2.ADAPTIVE_THRESH_MEAN_C, \
+                                cv2.THRESH_BINARY, 15, -2)
+    bwh = cv2.adaptiveThreshold(horizontal, 255, cv2.ADAPTIVE_THRESH_MEAN_C, \
+                                cv2.THRESH_BINARY, 15, -2)
+    v_h_and = cv2.bitwise_and(bwv,bwh)
 
     #show_wait_destroy("and", v_h_and)
 
     ### finding contours, can use connectedcomponents aswell
-    contours,_ = cv.findContours(v_h_and, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    contours,_ = cv2.findContours(v_h_and, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     ### converting to bounding boxes from polygon
-    contours=[cv.boundingRect(cnt) for cnt in contours]
+    contours=[cv2.boundingRect(cnt) for cnt in contours]
     img = np.zeros((src.shape[0],src.shape[1],3), np.uint8)
     ### drawing rectangle for each contour for visualising
     for cnt in contours:
         x,y,w,h=cnt
-        cv.rectangle(img,(x,y),(x+w,y+h),(0,255,0),10)
+        cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),10)
     #show_wait_destroy("and", img)
 
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    contours,_ = cv.findContours(img, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    contours,_ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ### converting to bounding boxes from polygon
-    contours=[cv.boundingRect(cnt) for cnt in contours]
+    contours=[cv2.boundingRect(cnt) for cnt in contours]
     img = np.zeros((src.shape[0],src.shape[1],3), np.uint8)
     ### drawing rectangle for each contour for visualising
-    transparent_background = np.zeros((570, 580, 4))
+    transparent_background = np.zeros((720, 720, 4))
     coord_list =[]
 
     # remove any extra points by searching for points that have too close a neighbor and removing them
     for cnt in contours:
         x,y,w,h=cnt
-        #cv.rectangle(src,(x,y),(x+w,y+h),(0,255,0),2)
+        #cv2.rectangle(src,(x,y),(x+w,y+h),(0,255,0),2)
 
         center_coords = (int((x+w/2)), int((y+h/2)))
         coord_list.append(center_coords)
-        cv.circle(transparent_background, center_coords, 5, (255, 255, 255), -1)
-    show_wait_destroy("intersections", transparent_background)
+        cv2.circle(transparent_background, center_coords, 5, (255, 255, 255), -1)
+    #show_wait_destroy("intersections", transparent_background)
 
     # remove any extra points by searching for points that have too close a neighbor and removing them
     pared_coords = []
@@ -122,14 +269,13 @@ def  process_analysis_grid(squareFile):
     coord_list_i = sorted(coord_list, key = lambda x: x[0])
     coord_listy = sorted(coord_list, key = lambda x: x[0])
     rejected_coords = set()
-    print(coord_list)
+    #print(coord_list)
     for icoord in coord_list_i:
         for jcoord in coord_listy:
             if icoord == jcoord or jcoord in rejected_coords:
                 continue
             if abs(icoord[0] - jcoord[0]) < 20:
                 if abs(icoord[1] - jcoord[1]) < 20:
-                    print(icoord,jcoord)
                     coord_list_i.remove(jcoord)
                     coord_listy.remove(jcoord)
                     rejected_coords.add(jcoord)
@@ -139,25 +285,36 @@ def  process_analysis_grid(squareFile):
     print(len(contours))
     print(len(pared_coords))
 
-    grid_background = np.zeros((570, 580, 4))
+    test_image = np.copy(src_img)
+    detected_coords = pared_coords
+
+    cv2.namedWindow(winname = "Add missing intersections") 
+    
+    cv2.setMouseCallback("Add missing intersections", draw_circle) 
+    
+    while True: 
+        cv2.imshow("Add missing intersections", test_image) 
+        
+        if cv2.waitKey(10) & 0xFF == 27: 
+            break
+
+
+    grid_background = np.zeros((720, 720, 4))
     for coord in pared_coords:
         x,y = coord
-        #cv.rectangle(src,(x,y),(x+w,y+h),(0,255,0),2)
 
-        # make a 60px square cocentric with the contour
-        # this represents each individual area that will be evaulated
-        cv.rectangle(src,(x-15,y-15),(x+15,y+15),(128,0,128),2)
-        cv.circle(src, coord, 3, (255, 255, 255), -1)
+        #make a 60px square cocentric with the contour
+        #this represents each individual area that will be evaulated
+        cv2.rectangle(src,(x-15,y-15),(x+15,y+15),(128,0,128),2)
+        cv2.circle(src, coord, 3, (255, 255, 255), -1)
 
-        cv.circle(transparent_background, coord, 5, (255, 0, 255), -1)
-        cv.circle(grid_background, coord, 5, (255, 255, 255), -1)
+        cv2.circle(grid_background, coord, 5, (255, 255, 255), -1)
     
-    show_wait_destroy("intersections", src)
-    show_wait_destroy("intersections", transparent_background)
+    #show_wait_destroy("evaluation areas", src)
     
 
     filename = 'gridfiles/evaluation_grid.png'
-    cv.imwrite(filename, grid_background) 
+    cv2.imwrite(filename, grid_background) 
     
     return pared_coords
 
@@ -168,7 +325,7 @@ def crop_and_save(src_file, out_path):
         # read the data as binary data stream
         grid_coords = pickle.load(filehandle)
 
-    src = cv.imread(src_file)
+    src = cv2.imread(src_file)
     # Check if image is loaded fine
     if src is None:
         print ('Error opening image: ' + squareFile)
@@ -182,7 +339,7 @@ def crop_and_save(src_file, out_path):
         xmax = x+15 if x < 585 else 600
         crop_img = src[ymin:ymax, xmin:xmax]
         #show_wait_destroy("crop", crop_img)
-        cv.imwrite(out_path+str(uuid.uuid4())+".jpg", crop_img) 
+        cv2.imwrite(out_path+str(uuid.uuid4())+".jpg", crop_img) 
 
     for coord in grid_coords:
         x,y = coord
@@ -191,11 +348,13 @@ def crop_and_save(src_file, out_path):
         xmin = x-15 if x > 15 else 0
         xmax = x+15 if x < 585 else 600
         # make a 60px square cocentric with the contour
-        cv.rectangle(src,(xmin,ymin),(xmax,ymax),(128,0,128),2)
+        cv2.rectangle(src,(xmin,ymin),(xmax,ymax),(128,0,128),2)
     show_wait_destroy("intersections", src)
 
 
 if __name__ == "__main__":
+
+    # TODO: maybe check similarity between image and image of white, black, board perhaps an average of all my samples
     if len(sys.argv) > 2:
         crop_and_save(sys.argv[1], sys.argv[2])
     else: 
