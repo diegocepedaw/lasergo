@@ -21,10 +21,10 @@ def to_SGF(board):
     for j, color in enumerate(row):
       if color == "black":
         black_moves += "AB"
-        black_moves += "[" + board_letters[i] + board_letters[j] + "]"
+        black_moves += "[" + board_letters[j] + board_letters[i] + "]"
       elif color == "white":
         white_moves += "AW"
-        white_moves += "[" + board_letters[i] + board_letters[j] + "]"
+        white_moves += "[" + board_letters[j] + board_letters[i] + "]"
 
   if side_to_move == "black":
     output += black_moves + "\n" + white_moves + "\n" + ")\n"

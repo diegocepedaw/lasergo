@@ -354,7 +354,7 @@ def evaluate_board_state(src_file):
     print(next_move)
     x, y = next_move[1]
     color = next_move[0]
-    coord = matrix[y][x]
+    coord = matrix[(board_size-1) - x][y]
     if color == "b":
             cv2.circle(empty_board, coord, 15, (0, 0, 0), -1)
             cv2.circle(empty_board, coord, 9, (255, 255, 255), 2)

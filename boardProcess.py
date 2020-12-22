@@ -112,6 +112,7 @@ class PerspectiveTransform():
         #mouseclick event and button
         self.canvas.bind("<Button 1>",self.insertCoords)
         self.canvas.bind("<Button 3>",self.removeCoords)
+        self.canvas.bind_all("<space>", self.captureFrame)
         self.ctrPanel = Frame(self.frame)
         self.ctrPanel.grid(row = 0, column = 2, columnspan = 2, sticky = N+E)
         self.addImgBtn = Button(self.ctrPanel, text="Browse", command=self.addImage)
@@ -161,7 +162,7 @@ class PerspectiveTransform():
         self.canvas.create_image(0,0,image=self.img,anchor="nw")
         self.coord = []
 
-    def captureFrame(self):
+    def captureFrame(self, event=None):
         maxSide = 720
         img = capture_image(self.camera)
         matrix = cv2.getPerspectiveTransform(self.pts1, self.pts2)

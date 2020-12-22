@@ -44,10 +44,10 @@ def capture_image(cam):
         print("failed to grab frame")
         return
         frame = blend(frame)
-    show_wait_destroy("captured frame", frame)
+    #show_wait_destroy("captured frame", frame)
     frame = blend(frame)
     #frame = cv2.addWeighted(frame, 0.5, frame, 0.5, 0.0)
-    show_wait_destroy("captured frame", frame)
+    #show_wait_destroy("captured frame", frame)
     #frame = increase_contrast(frame)
     # frame = cv2.add(frame,np.array([-10.0]))
     #show_wait_destroy("contrast frame", frame)
