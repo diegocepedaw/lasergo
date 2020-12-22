@@ -36,6 +36,9 @@ def start_capture():
 
 def capture_image(cam):
     ''' capture an image from the camera and apply procesing '''
+    # manually set focus
+    focus = 0  # min: 0, max: 255, increment:5
+    cam.set(28, focus) 
     ret, frame = cam.read()
     if not ret:
         print("failed to grab frame")

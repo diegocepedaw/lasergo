@@ -14,6 +14,8 @@ images = {}
 def evaluate_image(image, answer=None):
     if len(index) == 0:
         initialize_references()
+    # apply Bilateral Filtering
+    image = cv2.bilateralFilter(image,9,75,75)
     results = {}
     test_hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8],
         [0, 256, 0, 256, 0, 256])
@@ -47,6 +49,8 @@ def initialize_references():
     
     filename = r'average_images\black_average.jpg'
     image = cv2.imread(filename)
+    # applly blur
+    image = cv2.bilateralFilter(image,9,75,75)
     images["black"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # extract a 3D RGB color histogram from the image,
     # using 8 bins per channel, normalize, and update
@@ -58,6 +62,8 @@ def initialize_references():
 
     filename = r'average_images\white_average.jpg'
     image = cv2.imread(filename)
+    # applly blur
+    image = cv2.bilateralFilter(image,9,75,75)
     images["white"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # extract a 3D RGB color histogram from the image,
     # using 8 bins per channel, normalize, and update
@@ -69,6 +75,8 @@ def initialize_references():
 
     filename = r'average_images\point_average.jpg'
     image = cv2.imread(filename)
+    # applly blur
+    image = cv2.bilateralFilter(image,9,75,75)
     images["board"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # extract a 3D RGB color histogram from the image,
     # using 8 bins per channel, normalize, and update

@@ -10,6 +10,7 @@ import pickle
 import uuid
 from scipy import spatial
 from test_histogram_coorelation import evaluate_image
+from sgf_utils import save_SGF
 
 test_image = None
 extra_coords = []
@@ -344,10 +345,25 @@ def evaluate_board_state(src_file):
     table = [fmt.format(*row) for row in s]
     print('\n'.join(table))
 
-    print(s)
+    board = s
     with open('board_state.data', 'wb') as filehandle:
             # store the data as binary data stream
-            pickle.dump(s, filehandle)
+            pickle.dump(board, filehandle)
+
+    next_move = save_SGF(board)
+    print(next_move)
+    x, y = next_move[1]
+    color = next_move[0]
+    coord = matrix[y][x]
+    if color == "b":
+            cv2.circle(empty_board, coord, 15, (0, 0, 0), -1)
+            cv2.circle(empty_board, coord, 9, (255, 255, 255), 2)
+    if color == "w":
+        cv2.circle(empty_board, coord, 15, (255, 255, 255), -1)
+        cv2.circle(empty_board, coord, 9, (0, 0, 0), 2)
+    show_wait_destroy("gnugo response", empty_board)
+
+    
 
 
 def crop_and_save(src_file, out_path):

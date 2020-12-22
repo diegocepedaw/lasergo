@@ -2,12 +2,14 @@ from sgfmill import sgf
 import pickle
 import string
 
+from gnugo_utils import get_response_move
+
 BOARD_SIZE = 19
-output_file = 'sgf_out.sgf'
+output_file = r'sgf_files\sgf_out.sgf'
 
 def to_SGF(board):
   # Return an SGF representation of the board state
-  side_to_move = "black"
+  side_to_move = "white"
   board_letters = string.ascii_lowercase # 'a' to 'z'
   output = "(;GM[1]FF[4]SZ[" + str(BOARD_SIZE) + "]\n"
   if side_to_move == "black":
@@ -37,6 +39,10 @@ def save_SGF(board):
   sgf.write(to_SGF(board))
   sgf.close()
   print("Saved to file " + output_file)
+
+  return get_response_move(output_file)
+
+  
 
 if __name__ == "__main__":
   with open('board_state.data', 'rb') as filehandle:
