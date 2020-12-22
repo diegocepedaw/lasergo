@@ -1,53 +1,45 @@
 from sgfmill import sgf
-game = sgf.Sgf_game(size=19)
-for move_info in ...:
-    node = game.extend_main_sequence()
-    node.set_move(move_info.colour, move_info.move)
-    if move_info.comment is not None:
-        node.set("C", move_info.comment)
-with open("gamestate.sfg", "wb") as f:
-    f.write(game.serialise())
+import pickle
+import string
 
+BOARD_SIZE = 19
+output_file = 'sgf_out.sgf'
 
 def to_SGF(board):
   # Return an SGF representation of the board state
+  side_to_move = "black"
   board_letters = string.ascii_lowercase # 'a' to 'z'
   output = "(;GM[1]FF[4]SZ[" + str(BOARD_SIZE) + "]\n"
-  if side_to_move.get() == 1:
+  if side_to_move == "black":
     output += "PL[B]\n"
   else:
     output += "PL[W]\n"
   black_moves, white_moves = "", ""
-  if BoardStates.BLACK in board:
-    black_moves += "AB"
-    for i in range(hsize):
-      for j in range(vsize):
-        if board[i,j] == BoardStates.BLACK:
-          black_moves += "[" + board_letters[i] + board_letters[j] + "]"
-  if BoardStates.WHITE in board:
-    white_moves += "AW"
-    for i in range(hsize):
-      for j in range(vsize):
-        if board[i,j] == BoardStates.WHITE:
-          white_moves += "[" + board_letters[i] + board_letters[j] + "]"
-  if side_to_move.get() == 1:
+  for i, row in enumerate(board):
+    for j, color in enumerate(row):
+      if color == "black":
+        black_moves += "AB"
+        black_moves += "[" + board_letters[i] + board_letters[j] + "]"
+      elif color == "white":
+        white_moves += "AW"
+        white_moves += "[" + board_letters[i] + board_letters[j] + "]"
+
+  if side_to_move == "black":
     output += black_moves + "\n" + white_moves + "\n" + ")\n"
   else:
     output += white_moves + "\n" + black_moves + "\n" + ")\n"
-  # According to the SGF standard, it shouldn't make a difference
-  # which order the AB[] and AW[] tags come in,
-  # but at the time of writing,
-  # Lizzie uses this to deduce which side is to move (ignoring the PL[] tag)!
   return output
 
 
-def save_SGF():
+def save_SGF(board):
   global output_file
-  if output_file is not None:
-    output_file = filedialog.asksaveasfilename(initialfile = output_file)
-  else:
-    output_file = filedialog.asksaveasfilename()
   sgf = open(output_file, "w")
-  sgf.write(to_SGF(full_board))
+  sgf.write(to_SGF(board))
   sgf.close()
-  log("Saved to file " + output_file)
+  print("Saved to file " + output_file)
+
+if __name__ == "__main__":
+  with open('board_state.data', 'rb') as filehandle:
+        # read the data as binary data stream
+        board = pickle.load(filehandle)
+  save_SGF(board)

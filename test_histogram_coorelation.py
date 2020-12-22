@@ -6,6 +6,7 @@ import argparse
 import glob
 import cv2
 import os
+import pickle
 
 index = {}
 images = {}

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from gridDetect import show_wait_destroy
+import blend_modes
 
 def start_capture():
     cam = cv2.VideoCapture(0)
@@ -34,14 +35,34 @@ def start_capture():
     cv2.destroyAllWindows()
 
 def capture_image(cam):
+    ''' capture an image from the camera and apply procesing '''
     ret, frame = cam.read()
     if not ret:
         print("failed to grab frame")
         return
-    frame = increase_contrast(frame)
-    frame = cv2.add(frame,np.array([-10.0]))
+        frame = blend(frame)
     show_wait_destroy("captured frame", frame)
+    frame = blend(frame)
+    #frame = cv2.addWeighted(frame, 0.5, frame, 0.5, 0.0)
+    show_wait_destroy("captured frame", frame)
+    #frame = increase_contrast(frame)
+    # frame = cv2.add(frame,np.array([-10.0]))
+    #show_wait_destroy("contrast frame", frame)
     return frame
+
+def blend(img):
+
+    a = img.astype(float)/255  
+    b = img.astype(float)/255 # make float on range 0-1
+
+    mask = a >= 0.5 # generate boolean mask of everywhere a > 0.5 
+    ab = np.zeros_like(a) # generate an output container for the blended image 
+
+    # now do the blending 
+    ab[~mask] = (2*a*b)[~mask] # 2ab everywhere a<0.5
+    ab[mask] = (1-2*(1-a)*(1-b))[mask] # else this
+
+    return  (ab*255).astype(np.uint8)
 
 def white_balance(img):
     result = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
@@ -64,7 +85,7 @@ def increase_contrast(img):
     show_wait_destroy('a_channel', a)
     show_wait_destroy('b_channel', b)
     #-----Applying CLAHE to L-channel-------------------------------------------
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    clahe = cv2.createCLAHE(clipLimit=0.2, tileGridSize=(8,8))
     cl = clahe.apply(l)
     ca = clahe.apply(a)
 

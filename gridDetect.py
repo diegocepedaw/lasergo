@@ -344,6 +344,11 @@ def evaluate_board_state(src_file):
     table = [fmt.format(*row) for row in s]
     print('\n'.join(table))
 
+    print(s)
+    with open('board_state.data', 'wb') as filehandle:
+            # store the data as binary data stream
+            pickle.dump(s, filehandle)
+
 
 def crop_and_save(src_file, out_path):
     ''' crop a board into images of each individual intersection and save them to disk to create the training dataset'''

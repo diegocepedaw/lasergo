@@ -140,6 +140,7 @@ class PerspectiveTransform():
         img = capture_image(self.camera)
 
         img = image_resize(img, maxLength = 720, inter = cv2.INTER_AREA)
+        self.original_image = np.copy(img)
         self.cv_img = img
         self.last_img = img
         b,g,r = cv2.split(img)
@@ -269,7 +270,7 @@ class PerspectiveTransform():
         print(self.filename+" is saved!")
        
     def load_analysis_grid(self):
-        filename = "gridfiles/evaluation_grid.png"
+        filename = "gridfiles\evaluation_grid.png"
         gridImage = image_resize(cv2.imread(filename), maxLength = 720, inter = cv2.INTER_AREA)
         frame_circle = gridImage.copy()
 
@@ -282,7 +283,7 @@ class PerspectiveTransform():
         pts2 = np.float32([[0, 0], [SIDE_LENGTH-1, 0], [0, SIDE_LENGTH-1], [SIDE_LENGTH-1, SIDE_LENGTH-1]])
         matrix = cv2.getPerspectiveTransform(self.pts2, self.pts1)
         grid_result = cv2.warpPerspective(gridImage, matrix, (SIDE_LENGTH,SIDE_LENGTH))
-        src = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
+        src = np.copy(self.original_image)
         src = cv2.copyMakeBorder( src, 0, grid_result.shape[0]-src.shape[0], 0, grid_result.shape[1]-src.shape[1], cv2.BORDER_CONSTANT)
         cv2.imshow("Perspective transformation", cv2.add(src,grid_result))
         cv2.imshow("Grid", grid_result)
