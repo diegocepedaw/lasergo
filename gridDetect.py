@@ -321,18 +321,19 @@ def evaluate_board_state(src_file):
 
     for coord in coordinates:
         x,y = coord
-        ymin = y-15 if y > 15 else 0
-        ymax = y+15 if y < 705 else 720
-        xmin = x-15 if x > 15 else 0
-        xmax = x+15 if x < 705 else 720
+        eval_width = 12
+        ymin = y-eval_width if y > eval_width else 0
+        ymax = y+eval_width if y < 720 - eval_width else 720
+        xmin = x-eval_width if x > eval_width else 0
+        xmax = x+10 if x < 720 - eval_width else 720
         crop_img = src[ymin:ymax, xmin:xmax]
         color = evaluate_image(crop_img)
         evaluation_map[coord] = color
-        cv2.rectangle(display_img,(x-15,y-15),(x+15,y+15),(128,0,128),2)
+        cv2.rectangle(display_img,(x-eval_width,y-eval_width),(x+eval_width,y+eval_width),(128,0,128),2)
         if color == "black":
             cv2.circle(empty_board, coord, 15, (0, 0, 0), -1)
         if color == "white":
-            cv2.circle(empty_board, coord, 15, (255, 255, 255), -1)
+            cv2.circle(empty_board, coord, 15, (248,248,255), -1)
 
     show_wait_destroy("evaluation_area", display_img)
     show_wait_destroy("calculated state", empty_board)

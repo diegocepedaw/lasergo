@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from gridDetect import show_wait_destroy
 import blend_modes
+from builtins import input
 
 def start_capture():
     cam = cv2.VideoCapture(0)
@@ -43,14 +44,15 @@ def capture_image(cam):
     if not ret:
         print("failed to grab frame")
         return
-        frame = blend(frame)
-    #show_wait_destroy("captured frame", frame)
+    show_wait_destroy("captured frame", frame)
     frame = blend(frame)
-    #frame = cv2.addWeighted(frame, 0.5, frame, 0.5, 0.0)
-    #show_wait_destroy("captured frame", frame)
-    #frame = increase_contrast(frame)
+    #frame = brightness(frame)
+    frame = adjust_gamma(frame)
+    frame = cv2.addWeighted(frame, 0.5, frame, 0.5, 0.0)
+    # show_wait_destroy("gamma corrected", frame)
+    # frame = increase_contrast(frame)
     # frame = cv2.add(frame,np.array([-10.0]))
-    #show_wait_destroy("contrast frame", frame)
+    show_wait_destroy("contrast frame", frame)
     return frame
 
 def blend(img):
@@ -66,6 +68,23 @@ def blend(img):
     ab[mask] = (1-2*(1-a)*(1-b))[mask] # else this
 
     return  (ab*255).astype(np.uint8)
+
+def brightness(img):
+    alpha = 0.9 # Simple contrast control
+    beta = -10   # Simple brightness control
+    new_image = np.zeros(img.shape, img.dtype)
+    new_image = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
+    show_wait_destroy("Contrast and brightness adjustment", new_image)
+    return new_image
+
+def adjust_gamma(image, gamma=0.75):
+	# build a lookup table mapping the pixel values [0, 255] to
+	# their adjusted gamma values
+	invGamma = 1.0 / gamma
+	table = np.array([((i / 255.0) ** invGamma) * 255
+		for i in np.arange(0, 256)]).astype("uint8")
+	# apply gamma correction using the lookup table
+	return cv2.LUT(image, table)
 
 def white_balance(img):
     result = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
@@ -84,18 +103,23 @@ def increase_contrast(img):
 
     #-----Splitting the LAB image to different channels-------------------------
     l, a, b = cv2.split(lab)
-    show_wait_destroy('l_channel', l)
-    show_wait_destroy('a_channel', a)
-    show_wait_destroy('b_channel', b)
+    # show_wait_destroy('l_channel', l)
+    # show_wait_destroy('a_channel', a)
+    # show_wait_destroy('b_channel', b)
     #-----Applying CLAHE to L-channel-------------------------------------------
-    clahe = cv2.createCLAHE(clipLimit=0.2, tileGridSize=(8,8))
+    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(5,5))
     cl = clahe.apply(l)
+    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(8,8))
     ca = clahe.apply(a)
 
     #-----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-    limg = cv2.merge((cl,ca,b))
+    limg = cv2.merge((cl,a,b))
 
     #-----Converting image from LAB Color model to RGB model--------------------
     final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-    show_wait_destroy('final', final)
+    #show_wait_destroy('final', final)
     return final
+
+if __name__ == "__main__":
+  cam = cv2.VideoCapture(0)
+  capture_image(cam)
