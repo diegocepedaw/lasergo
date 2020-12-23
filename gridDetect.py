@@ -355,16 +355,20 @@ def evaluate_board_state(src_file):
     print(next_move)
     x, y = next_move[1]
     color = next_move[0]
-    coord = matrix[(board_size-1) - x][y]
+    response_coord = matrix[(board_size-1) - x][y]
     if color == "b":
-            cv2.circle(empty_board, coord, 15, (0, 0, 0), -1)
-            cv2.circle(empty_board, coord, 9, (255, 255, 255), 2)
+            cv2.circle(empty_board, response_coord, 15, (0, 0, 0), -1)
+            cv2.circle(empty_board, response_coord, 9, (255, 255, 255), 2)
     if color == "w":
-        cv2.circle(empty_board, coord, 15, (255, 255, 255), -1)
-        cv2.circle(empty_board, coord, 9, (0, 0, 0), 2)
+        cv2.circle(empty_board, response_coord, 15, (255, 255, 255), -1)
+        cv2.circle(empty_board, response_coord, 9, (0, 0, 0), 2)
     show_wait_destroy("gnugo response", empty_board)
 
-    
+    transparent_background = np.zeros((720, 720, 4))
+    cv2.circle(transparent_background, response_coord, 3, (255, 255, 255), -1)
+
+
+    return transparent_background
 
 
 def crop_and_save(src_file, out_path):

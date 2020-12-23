@@ -8,6 +8,7 @@ import uuid
 
 from webcam_util import start_capture, capture_image
 from gridDetect import process_analysis_grid, show_wait_destroy, evaluate_board_state
+from laser_utils import target_laser
 SIDE_LENGTH = 720
 
 def image_resize(image, maxLength = 720, inter = cv2.INTER_AREA):
@@ -139,6 +140,7 @@ class PerspectiveTransform():
         # img = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
 
         img = capture_image(self.camera)
+        self.full_res_orig = np.copy(img)
 
         img = image_resize(img, maxLength = 720, inter = cv2.INTER_AREA)
         self.original_image = np.copy(img)
@@ -162,6 +164,33 @@ class PerspectiveTransform():
         self.canvas.create_image(0,0,image=self.img,anchor="nw")
         self.coord = []
 
+    def reverse_coord_transform(self, response_img):
+
+        matrix = cv2.getPerspectiveTransform(self.pts2, self.pts1)
+        result = cv2.warpPerspective(response_img, matrix, (SIDE_LENGTH,SIDE_LENGTH))
+        src = np.copy(self.original_image)
+        src = cv2.copyMakeBorder( src, 0, result.shape[0]-src.shape[0], 0, result.shape[1]-src.shape[1], cv2.BORDER_CONSTANT)
+
+        thresh = cv2.threshold(result[:, :, 1], 25, 255, cv2.THRESH_BINARY)[1]
+        lel = cv2.findNonZero(thresh)
+        x = 0
+        y = 0
+        if lel is not None:
+            for element in lel:
+                y += element[0][0]
+                x += element[0][1]
+            x = x / len(lel)
+            y = y / len(lel)
+
+        response_coord = (int(y),int(x))
+        orig_img = np.copy(self.original_image)
+        cv2.circle(orig_img, response_coord, 10, (255, 255, 255), -1)
+        show_wait_destroy("placement", orig_img)
+        
+        print(response_coord)
+        target_laser(response_coord)
+
+
     def captureFrame(self, event=None):
         maxSide = 720
         img = capture_image(self.camera)
@@ -172,7 +201,8 @@ class PerspectiveTransform():
         img_name = "captured_images/web_capture.png"
         cv2.imwrite(img_name, img)
         print("{} written!".format(img_name))
-        evaluate_board_state("captured_images/web_capture.png")
+        response_point_img = evaluate_board_state("captured_images/web_capture.png")
+        response_coord = self.reverse_coord_transform(response_point_img)
     
     #Save coord according to mouse left click
     def insertCoords(self, event):
@@ -273,21 +303,16 @@ class PerspectiveTransform():
     def load_analysis_grid(self):
         filename = "gridfiles\evaluation_grid.png"
         gridImage = image_resize(cv2.imread(filename), maxLength = 720, inter = cv2.INTER_AREA)
-        frame_circle = gridImage.copy()
 
-        cv2.circle(frame_circle, tuple(self.coord[0]), 5, (0, 0, 255), -1)
-        cv2.circle(frame_circle, tuple(self.coord[1]), 5, (0, 0, 255), -1)
-        cv2.circle(frame_circle, tuple(self.coord[2]), 5, (0, 0, 255), -1)
-        cv2.circle(frame_circle, tuple(self.coord[3]), 5, (0, 0, 255), -1)
-     
+
         pts1 = np.float32(self.coord)    
         pts2 = np.float32([[0, 0], [SIDE_LENGTH-1, 0], [0, SIDE_LENGTH-1], [SIDE_LENGTH-1, SIDE_LENGTH-1]])
         matrix = cv2.getPerspectiveTransform(self.pts2, self.pts1)
-        grid_result = cv2.warpPerspective(gridImage, matrix, (SIDE_LENGTH,SIDE_LENGTH))
+        result = cv2.warpPerspective(gridImage, matrix, (SIDE_LENGTH,SIDE_LENGTH))
         src = np.copy(self.original_image)
-        src = cv2.copyMakeBorder( src, 0, grid_result.shape[0]-src.shape[0], 0, grid_result.shape[1]-src.shape[1], cv2.BORDER_CONSTANT)
-        cv2.imshow("Perspective transformation", cv2.add(src,grid_result))
-        cv2.imshow("Grid", grid_result)
+        src = cv2.copyMakeBorder( src, 0, result.shape[0]-src.shape[0], 0, result.shape[1]-src.shape[1], cv2.BORDER_CONSTANT)
+        cv2.imshow("Perspective transformation", cv2.add(src,result))
+        cv2.imshow("Grid", result)
 
         
     def slice(self):
