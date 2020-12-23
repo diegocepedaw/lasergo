@@ -7,6 +7,7 @@ import glob
 import cv2
 import os
 import pickle
+from image_processing_utils import apply_processing
 
 index = {}
 images = {}
@@ -37,9 +38,25 @@ def evaluate_image(image, answer=None):
         evaluated_type = "board"
     if answer is not None:
         if answer != evaluated_type:
+            data = np.reshape(image, (-1,3))
+            print(data.shape)
+            data = np.float32(data)
+
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+            flags = cv2.KMEANS_RANDOM_CENTERS
+            compactness,labels,centers = cv2.kmeans(data,1,None,criteria,10,flags)
+
+            print('Dominant color is: bgr({})'.format(centers[0].astype(np.int32)))
+            width = 50
+            height = 50
+            rgb = centers[0].astype(np.int32)
+            dominant_color = np.zeros((height,width,3), np.uint8)
+            dominant_color[:,0:width//2] = (rgb[0],rgb[1],rgb[2])      # (B, G, R)
+            dominant_color[:,width//2:width] = (rgb[0],rgb[1],rgb[2])
             print(correlations)
-            # cv2.imshow("color", image)
-            # cv2.waitKey(0)
+            cv2.imshow("incorrect answer", image)
+            cv2.imshow("dominant color", dominant_color)
+            cv2.waitKey(0)
 
     return evaluated_type
 
@@ -49,6 +66,7 @@ def initialize_references():
     
     filename = r'average_images\black_average.jpg'
     image = cv2.imread(filename)
+    image = apply_processing(image)
     # applly blur
     image = cv2.bilateralFilter(image,9,75,75)
     images["black"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -62,6 +80,7 @@ def initialize_references():
 
     filename = r'average_images\white_average.jpg'
     image = cv2.imread(filename)
+    image = apply_processing(image)
     # applly blur
     image = cv2.bilateralFilter(image,9,75,75)
     images["white"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -75,6 +94,7 @@ def initialize_references():
 
     filename = r'average_images\point_average.jpg'
     image = cv2.imread(filename)
+    image = apply_processing(image)
     # applly blur
     image = cv2.bilateralFilter(image,9,75,75)
     images["board"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

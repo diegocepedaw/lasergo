@@ -32,8 +32,7 @@ def image_resize(image, maxLength = 720, inter = cv2.INTER_AREA):
     return resized
 
 
-def target_laser(target):
-    cap = cv2.VideoCapture(0)
+def target_laser(target, cap):
     while (1):
         begin = time.time()
         # Take each frame
@@ -63,21 +62,21 @@ def target_laser(target):
 
         laser_coords = (int(y),int(x))
         distance_to_target = math.sqrt( ((laser_coords[0]-target[0])**2)+((laser_coords[1]-target[1])**2) )
-        print(distance_to_target)
         if distance_to_target < 20:
-            cv2.circle(frame, target, 5, (0, 255, 0), 2)
+            cv2.circle(frame, target, 5, (0, 255, 0), -1)
         cv2.circle(frame, target, 10, (255, 0, 0), 2)
 
 
         cv2.imshow('mask', mask)
         cv2.imshow('Track Laser', frame)
         time.sleep(0.5)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        waitkey = cv2.waitKey(1)
+        if waitkey & 0xFF == ord('q') or waitkey & 0xFF == ord('q') or waitkey == 9:
             break
-
-    cap.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-  target_laser((300,200))
+  cap = cv2.VideoCapture(0)
+  target_laser((300,200), cap)
+  cap.release()

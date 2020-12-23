@@ -113,21 +113,21 @@ class PerspectiveTransform():
         #mouseclick event and button
         self.canvas.bind("<Button 1>",self.insertCoords)
         self.canvas.bind("<Button 3>",self.removeCoords)
-        self.canvas.bind_all("<space>", self.captureFrame)
+        self.canvas.bind_all("<Tab>", self.captureFrame)
         self.ctrPanel = Frame(self.frame)
         self.ctrPanel.grid(row = 0, column = 2, columnspan = 2, sticky = N+E)
-        self.addImgBtn = Button(self.ctrPanel, text="Browse", command=self.addImage)
-        self.addImgBtn.grid(row=0,column=2, pady = 5, sticky =NE)
+        # self.addImgBtn = Button(self.ctrPanel, text="Browse", command=self.addImage)
+        # self.addImgBtn.grid(row=0,column=2, pady = 5, sticky =NE)
         self.initBtn = Button(self.ctrPanel, text="Initialize board", command=self.initImage)
         self.initBtn.grid(row=1,column=2, pady = 5, sticky =NE)
         self.undoBtn = Button(self.ctrPanel, text="Undo", command=self.undo)
         self.undoBtn.grid(row=2,column=2, pady = 5, sticky =NE)
-        self.loadBtn = Button(self.ctrPanel, text="Load grid", command=self.load_analysis_grid)
+        self.loadBtn = Button(self.ctrPanel, text="Visualize grid", command=self.load_analysis_grid)
         self.loadBtn.grid(row=3,column=2, pady = 5, sticky =NE)
-        self.loadBtn = Button(self.ctrPanel, text="slice board", command=self.slice)
-        self.loadBtn.grid(row=4,column=2, pady = 5, sticky =NE)
-        self.saveBtn = Button(self.ctrPanel, text="Save board", command=self.saveBoard)
-        self.saveBtn.grid(row=5,column=2, pady = 5, sticky =NE)
+        # self.loadBtn = Button(self.ctrPanel, text="slice board", command=self.slice)
+        # self.loadBtn.grid(row=4,column=2, pady = 5, sticky =NE)
+        # self.saveBtn = Button(self.ctrPanel, text="Save board", command=self.saveBoard)
+        # self.saveBtn.grid(row=5,column=2, pady = 5, sticky =NE)
         self.captureBtn = Button(self.ctrPanel, text="Capture frame", command=self.captureFrame)
         self.captureBtn.grid(row=6,column=2, pady = 5, sticky =NE)
 
@@ -185,10 +185,10 @@ class PerspectiveTransform():
         response_coord = (int(y),int(x))
         orig_img = np.copy(self.original_image)
         cv2.circle(orig_img, response_coord, 10, (255, 255, 255), -1)
-        show_wait_destroy("placement", orig_img)
+        #show_wait_destroy("placement", orig_img)
         
         print(response_coord)
-        target_laser(response_coord)
+        target_laser(response_coord, self.camera)
 
 
     def captureFrame(self, event=None):
