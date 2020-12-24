@@ -335,7 +335,7 @@ def evaluate_board_state(src_file):
         if color == "white":
             cv2.circle(empty_board, coord, 15, (248,248,255), -1)
 
-    show_wait_destroy("evaluation_area", display_img)
+    # show_wait_destroy("evaluation_area", display_img)
     show_wait_destroy("calculated state", empty_board)
         
 

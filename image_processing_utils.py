@@ -55,8 +55,8 @@ def desaturate_blues(img):
     b = b.clip(0,255).astype(np.uint8)
     img_desat = cv2.merge([b,g,r])
 
-    cv2.imshow('img', img)
-    cv2.imshow('img_desat', img_desat)
+    # cv2.imshow('img', img)
+    # cv2.imshow('img_desat', img_desat)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     return img_desat

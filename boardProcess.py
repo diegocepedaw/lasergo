@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 import uuid
 
-from webcam_util import start_capture, capture_image
+from webcam_util import capture_image
 from gridDetect import process_analysis_grid, show_wait_destroy, evaluate_board_state
 from laser_utils import target_laser
 SIDE_LENGTH = 720
@@ -197,10 +197,10 @@ class PerspectiveTransform():
         matrix = cv2.getPerspectiveTransform(self.pts1, self.pts2)
         img = image_resize(img, maxLength = 720, inter = cv2.INTER_AREA)
         img = cv2.warpPerspective(img, matrix, (maxSide,maxSide))
-        show_wait_destroy("image", img)
+        #show_wait_destroy("image", img)
         img_name = "captured_images/web_capture.png"
         cv2.imwrite(img_name, img)
-        print("{} written!".format(img_name))
+        #print("{} written!".format(img_name))
         response_point_img = evaluate_board_state("captured_images/web_capture.png")
         response_coord = self.reverse_coord_transform(response_point_img)
     
