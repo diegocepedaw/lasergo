@@ -1,6 +1,6 @@
 # lasergo
 
-This project is a working proof of concept for a computer vision based robot that allows playing Go against a computer on a real board by using a laser to point to where the computer wishes to move on the board. The goal of this project was to get a working project up and running quickly so there is quite a bit of room for improvements and plenty of rough edges and shortcuts in the code. I highly encourage contrinutions and collaboration as it is my hope that the community can take this proof of concept and turn it into something that can be enjoyed by all.
+This project is a working proof of concept for a computer vision based robot that allows playing Go against a computer on a real board by using a laser to point to where the computer wishes to move on the board. The goal of this project was to get a working prototype up and running quickly so there is quite a bit of room for improvements and plenty of rough edges and shortcuts in the code. I highly encourage contrinutions and collaboration as it is my hope that the community can take this proof of concept and turn it into something that can be enjoyed by all. I can be reached at diegocepedaw@gmail.com for any questions.
 
 ![lasergo in action](https://i.imgur.com/9hwDuZm.jpg)
 
