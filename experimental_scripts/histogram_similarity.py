@@ -15,7 +15,7 @@ images = {}
 iterations = 0
 mistakes = 0
 
-filename = r'average_images\black_average.jpg'
+filename = r'..\average_images\black_average.jpg'
 image = cv2.imread(filename)
 images["black"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 # extract a 3D RGB color histogram from the image,
@@ -26,7 +26,7 @@ hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8],
 hist = cv2.normalize(hist, hist).flatten()
 index["black"] = hist
 
-filename = r'average_images\white_average.jpg'
+filename = r'..\average_images\white_average.jpg'
 image = cv2.imread(filename)
 images["white"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 # extract a 3D RGB color histogram from the image,
@@ -37,7 +37,7 @@ hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8],
 hist = cv2.normalize(hist, hist).flatten()
 index["white"] = hist
 
-filename = r'average_images\point_average.jpg'
+filename = r'..\average_images\point_average.jpg'
 image = cv2.imread(filename)
 images["board"] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 # extract a 3D RGB color histogram from the image,
@@ -78,7 +78,7 @@ for (methodName, method) in OPENCV_METHODS:
 
     iterations = 0
     mistakes = 0
-    f = r'training_images\white_stone'
+    f = r'..\training_images\white_stone'
     for file in os.listdir(f):
         f_img = f+"/"+file
         image = cv2.imread(f_img)

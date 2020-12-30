@@ -3,7 +3,7 @@ import numpy as np
 from gridDetect import show_wait_destroy
 import blend_modes
 from builtins import input
-from image_processing_utils import apply_processing
+from image_processing_utils import apply_processing, increase_contrast
 
 def capture_image(cam):
     ''' capture an image from the camera and apply procesing '''
@@ -15,6 +15,18 @@ def capture_image(cam):
         print("failed to grab frame")
         return
     frame = apply_processing(frame)
+    return frame
+
+def capture_board(cam):
+    ''' capture an image from the camera and apply procesing '''
+    # manually set focus
+    focus = 0  # min: 0, max: 255, increment:5
+    cam.set(28, focus) 
+    ret, frame = cam.read()
+    if not ret:
+        print("failed to grab frame")
+        return
+    frame = increase_contrast(frame)
     return frame
 
 

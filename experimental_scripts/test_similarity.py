@@ -3,26 +3,26 @@ import os
    
       
 # test image 
-image = cv2.imread(r'training_images\black_stone\0a1ba965-a068-43a2-8fae-539c53c499eb.jpg')
+image = cv2.imread(r'..\training_images\black_stone\0a1ba965-a068-43a2-8fae-539c53c499eb.jpg')
 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
 histogram = cv2.calcHist([gray_image], [0],  
                          None, [256], [0, 256]) 
 
 # black stone image 
-image = cv2.imread(r'average_images\black_average.jpg') 
+image = cv2.imread(r'..\average_images\black_average.jpg') 
 gray_image1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
 histogram1 = cv2.calcHist([gray_image1], [0],  
                           None, [256], [0, 256]) 
    
 
 # white stone image 
-image = cv2.imread(r'average_images\white_average.jpg') 
+image = cv2.imread(r'..\average_images\white_average.jpg') 
 gray_image2 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
 histogram2 = cv2.calcHist([gray_image2], [0],  
                           None, [256], [0, 256]) 
 
 # empty point image 
-image = cv2.imread(r'average_images\point_average.jpg') 
+image = cv2.imread(r'..\average_images\point_average.jpg') 
 gray_image3 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
 histogram3 = cv2.calcHist([gray_image3], [0],  
                           None, [256], [0, 256])
@@ -34,7 +34,7 @@ test_images = 1000
 c1, c2, c3 = 0, 0, 0
 iterations = 0
 mistakes = 0
-f = r'training_images\black_stone'
+f = r'..\training_images\black_stone'
 for file in os.listdir(f):
     f_img = f+"/"+file
     image = cv2.imread(f_img)
@@ -79,7 +79,7 @@ for file in os.listdir(f):
 c1, c2, c3 = 0, 0, 0
 iterations = 0
 mistakes = 0
-f = r'training_images\white_stone'
+f = r'..\training_images\white_stone'
 for file in os.listdir(f):
     f_img = f+"/"+file
     image = cv2.imread(f_img)

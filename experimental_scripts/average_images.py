@@ -2,7 +2,7 @@ import os, numpy, PIL
 from PIL import Image
 
 # Access all jpg files in directory
-directory = r'C:\Users\diego\Documents\lasergo\training_images\empty_point'
+directory = r'training_images\empty_point'
 allfiles=os.listdir(directory)
 imlist=[filename for filename in allfiles if  filename[-4:] in [".jpg",".JPG"]]
 

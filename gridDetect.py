@@ -15,7 +15,7 @@ from sgf_utils import save_SGF
 test_image = None
 extra_coords = []
 detected_coords = None
-src_file = r"C:\Users\diego\Documents\lasergo\result\flatboard.jpg"
+src_file = r"result\flatboard.jpg"
 src_img = None
 
 

@@ -64,7 +64,7 @@ def test_color_picker():
     test_images = 100
     i = 0
     mistakes = 0
-    f = r'training_images\black_stone'
+    f = r'..\training_images\black_stone'
     for file in os.listdir(f):
         f_img = f+"/"+file
         color = determine_color(f_img, "black")
@@ -82,7 +82,7 @@ def test_color_picker():
     # test white
     i = 0
     mistakes = 0
-    f = r'training_images\white_stone'
+    f = r'..\training_images\white_stone'
     for file in os.listdir(f):
         f_img = f+"/"+file
         color = determine_color(f_img, "white")
@@ -100,7 +100,7 @@ def test_color_picker():
     # test board
     i = 0
     mistakes = 0
-    f = r'training_images\empty_point'
+    f = r'..\training_images\empty_point'
     for file in os.listdir(f):
         f_img = f+"/"+file
         color = determine_color(f_img, "board")

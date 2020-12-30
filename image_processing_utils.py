@@ -120,7 +120,7 @@ def increase_contrast(img):
     ca = clahe.apply(a)
 
     #-----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-    limg = cv2.merge((cl,a,b))
+    limg = cv2.merge((cl,ca,b))
 
     #-----Converting image from LAB Color model to RGB model--------------------
     final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)

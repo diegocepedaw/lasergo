@@ -13,9 +13,9 @@ import webcolors
 #     return '%02x%02x%02x' % rgb
 
 
-face_cascade=cv2.CascadeClassifier(r"C:\Users\diego\Documents\lasergo\classifiers\black_stone\cascade.xml")###path of cascade file
+face_cascade=cv2.CascadeClassifier(r"classifiers\black_stone\cascade.xml")###path of cascade file
 ## following is an test image u can take any image from the p folder in the temp folder and paste address of it on below line 
-img= cv2.imread(r"C:\Users\diego\Documents\lasergo\training_images\black_stone\0a1ba965-a068-43a2-8fae-539c53c499eb.jpg")###path of image file which we want to detect
+img= cv2.imread(r"training_images\black_stone\0a1ba965-a068-43a2-8fae-539c53c499eb.jpg")###path of image file which we want to detect
 
 colors, count = np.unique(img.reshape(-1,img.shape[-1]), axis=0, return_counts=True)
 rgb = colors[count.argmax()]
@@ -35,7 +35,7 @@ else:
     print("board")
 cv2.waitKey(0)
 
-img= cv2.imread(r"C:\Users\diego\Documents\lasergo\training_images\white stone\0a61eb05-c266-4def-abc1-f5cd2c4f0d84.jpg")###path of image file which we want to detect
+img= cv2.imread(r"training_images\white stone\0a61eb05-c266-4def-abc1-f5cd2c4f0d84.jpg")###path of image file which we want to detect
 
 colors, count = np.unique(img.reshape(-1,img.shape[-1]), axis=0, return_counts=True)
 rgb = colors[count.argmax()]
@@ -55,7 +55,7 @@ else:
 cv2.waitKey(0)
 
 
-img= cv2.imread(r"C:\Users\diego\Documents\lasergo\training_images\empty_point\0d7c76fd-cbdf-4d56-a74e-629d496b4905.jpg")###path of image file which we want to detect
+img= cv2.imread(r"training_images\empty_point\0d7c76fd-cbdf-4d56-a74e-629d496b4905.jpg")###path of image file which we want to detect
 
 colors, count = np.unique(img.reshape(-1,img.shape[-1]), axis=0, return_counts=True)
 rgb = colors[count.argmax()]
