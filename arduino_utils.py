@@ -6,7 +6,24 @@ import serial
 import pickle
 
 LASER_START = (100,100)
-arduino = serial.Serial('COM5', 9600)
+arduino = serial.Serial('COM6', 9600, timeout=5)
+
+def clear_leds():
+    # turn off all leds
+    data = bytes("C0,0\r\n", "utf8")
+    arduino.write(data)                          # write increment to serial port 
+    print("wrote: " + str(data)) 
+    reachedPos = str(arduino.readline())            # read serial port for arduino echo
+    print("read: " + str(reachedPos))
+
+def set_led_coordinates(x_coord,y_coord):
+    y_coord += 19
+    # light up the leds on the board to indicate a coordinate
+    data = bytes("O" + str(x_coord) + "," + str(y_coord)+'\r\n', 'utf8')
+    arduino.write(data)                          # write position to serial port
+    print("wrote: " + str(data)) 
+    reachedPos = str(arduino.readline())            # read serial port for arduino echo
+    print("read: " + str(reachedPos))
 
 def control_laser(x_travel,y_travel):
     data = bytes("I" + str(x_travel) + "," + str(y_travel)+'\r\n', 'utf8')

@@ -18,7 +18,6 @@ detected_coords = None
 src_file = r"result\flatboard.jpg"
 src_img = None
 
-
 def draw_grid(img, line_color=(0, 255, 0), thickness=1, type_=cv2.LINE_AA, pxstep=40):
     '''(ndarray, 3-tuple, int, int) -> void
     draw gridlines on img
@@ -362,14 +361,7 @@ def evaluate_board_state(src_file):
     if color == "w":
         cv2.circle(empty_board, response_coord, 15, (255, 255, 255), -1)
         cv2.circle(empty_board, response_coord, 9, (0, 0, 0), 2)
-    show_wait_destroy("gnugo response", empty_board)
-
-    transparent_background = np.zeros((720, 720, 4))
-    cv2.circle(transparent_background, response_coord, 3, (255, 255, 255), -1)
-
-
-    return transparent_background
-
+    return (x,y,response_coord, empty_board)
 
 def crop_and_save(src_file, out_path):
     ''' crop a board into images of each individual intersection and save them to disk to create the training dataset'''
@@ -406,8 +398,6 @@ def crop_and_save(src_file, out_path):
 
 
 if __name__ == "__main__":
-
-    # TODO: maybe check similarity between image and image of white, black, board perhaps an average of all my samples
     if len(sys.argv) > 2:
         crop_and_save(sys.argv[1], sys.argv[2])
     elif len(sys.argv) == 2:

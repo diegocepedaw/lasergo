@@ -8,8 +8,11 @@ import uuid
 
 from webcam_util import capture_image, capture_board
 from gridDetect import process_analysis_grid, show_wait_destroy, evaluate_board_state
-from laser_utils import target_laser
+from arduino_utils import target_laser, set_led_coordinates, clear_leds
+
 SIDE_LENGTH = 720
+LED_ENABLED = True
+LASER_ENABLED = False
 
 def image_resize(image, maxLength = 720, inter = cv2.INTER_AREA):
     # initialize the dimensions of the image to be resized and
@@ -138,6 +141,8 @@ class PerspectiveTransform():
         # self.filename = self.file.split('/')[-1]
         # self.filename = self.filename.rstrip('.jpg')
         # img = image_resize(cv2.imread(self.file), maxLength = 720, inter = cv2.INTER_AREA)
+        if LED_ENABLED:
+            clear_leds()
 
         img = capture_board(self.camera)
         self.full_res_orig = np.copy(img)
@@ -164,8 +169,10 @@ class PerspectiveTransform():
         self.canvas.create_image(0,0,image=self.img,anchor="nw")
         self.coord = []
 
-    def reverse_coord_transform(self, response_img):
+    def reverse_coord_transform(self, response_coord):
 
+        response_img = np.zeros((720, 720, 4))
+        cv2.circle(response_img, response_coord, 3, (255, 255, 255), -1)
         matrix = cv2.getPerspectiveTransform(self.pts2, self.pts1)
         result = cv2.warpPerspective(response_img, matrix, (SIDE_LENGTH,SIDE_LENGTH))
         src = np.copy(self.original_image)
@@ -192,6 +199,8 @@ class PerspectiveTransform():
 
 
     def captureFrame(self, event=None):
+        if LED_ENABLED:
+            clear_leds()
         maxSide = 720
         img = capture_image(self.camera)
         matrix = cv2.getPerspectiveTransform(self.pts1, self.pts2)
@@ -201,8 +210,13 @@ class PerspectiveTransform():
         img_name = "captured_images/web_capture.png"
         cv2.imwrite(img_name, img)
         #print("{} written!".format(img_name))
-        response_point_img = evaluate_board_state("captured_images/web_capture.png")
-        response_coord = self.reverse_coord_transform(response_point_img)
+        x,y,response_coord,board_image = evaluate_board_state("captured_images/web_capture.png")
+        if LASER_ENABLED:
+            self.reverse_coord_transform(response_coord)
+        if LED_ENABLED:
+            set_led_coordinates(y,x)
+        show_wait_destroy("gnugo response", board_image)
+
     
     #Save coord according to mouse left click
     def insertCoords(self, event):
