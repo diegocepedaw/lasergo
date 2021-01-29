@@ -11,8 +11,8 @@ from gridDetect import process_analysis_grid, show_wait_destroy, evaluate_board_
 from arduino_utils import target_laser, set_led_coordinates, clear_leds
 
 SIDE_LENGTH = 720
-LED_ENABLED = True
-LASER_ENABLED = False
+LED_ENABLED = False
+LASER_ENABLED = True
 
 def image_resize(image, maxLength = 720, inter = cv2.INTER_AREA):
     # initialize the dimensions of the image to be resized and
